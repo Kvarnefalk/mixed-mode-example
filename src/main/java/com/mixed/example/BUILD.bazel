@@ -1,0 +1,60 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@io_bazel_rules_kotlin//kotlin:core.bzl", "kt_compiler_plugin")
+
+
+java_plugin(
+    name = "scip",
+    deps = [
+        "@scip_java//semanticdb-javac"
+    ],
+)
+
+kt_compiler_plugin(
+    id = "com.sourcegraph.semanticdb_javac.SemanticdbPlugin",
+    name = "scip_kt",
+    deps = [
+        "@scip_java//semanticdb-javac"
+    ],
+    stubs_phase = False,
+    compile_phase = True,
+    target_embedded_compiler = True
+)
+
+java_library(
+    name = "scip_plugin",
+    visibility = [
+        "//visibility:public"
+    ],
+    exported_plugins = [":scip"],
+    neverlink = 1,
+    #javacopts = ["'-Xplugin:semanticdb -build-tool:bazel'"]
+)
+
+kt_jvm_library(
+    name = "kotlin_scip",
+    exported_compiler_plugins = [":scip_kt"],
+    exports = [
+        "@scip_java//semanticdb-javac"
+    ],
+)
+
+java_library(
+    name = "libjava",
+    srcs = [
+        "Example.java"
+    ],
+    plugins = [
+        ":scip"
+    ],
+    #javacopts = ["'-Xplugin:semanticdb -build-tool:bazel'"]    
+)
+
+kt_jvm_library(
+    name = "libkt",
+    srcs = [
+        "Example.java"
+    ],
+    deps = [
+        ":scip_plugin"
+    ]
+)
